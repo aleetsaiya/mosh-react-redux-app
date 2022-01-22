@@ -1,70 +1,117 @@
-# Getting Started with Create React App
+# Mosh redux course
+> 這份 repository 紀錄課程中最後一個單元
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Integration with React
+1. 可以直接把之前寫好的 redux 資料夾 `store` 擺進來
+2. install redux 程式中使用到的 dependencies
+```bash
+npm install redux @redux.js/toolkit axios moment
+```
+3. install react-redux
+```bash
+npm install react-redux
+```
 
-## Available Scripts
+4. 在上層 `component` create store，以及使用 `react-redux` 建立 `Provider`
+```js
+import "./App.css";
+import BugsList from "./components/BugsList";
+// import createStore
+import configureStore from "./store/configureStore";
+import { Provider } from "react-redux";
 
-In the project directory, you can run:
+const store = configureStore();
 
-### `npm start`
+function App() {
+  return (
+    // every components below this component will be able to access our store
+    <Provider store={store}>
+      <BugsList />
+    </Provider>
+  );
+}
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+export default App;
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```
 
-### `npm test`
+5. 被包住在 `Provider` 裡面的 `component`，使用 `useDispatch`, `useSelector` 進行操作。
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+`useDispatch()`: 回傳一個 dispatch function。
+```js
+const dispatch = useDispatch();
+```
+`useSelector(func)`: 需要輸入一個 function 當作 argument。這個 function 可以選擇 `state` 中的特定資料進行回傳
 
-### `npm run build`
+> 當 store 中的 state 有變更時，會使 react rerender，沒變更的話不會
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```js
+const bugs = useSelector((state) => state.entities.bugs.list);
+```
+完整程式碼: ( BugsList Component )
+```js
+// in BugsList.jsx
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { loadBugs } from "../store/bugs";
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+const BugsList = () => {
+  // 獲得 dispatch function
+  const dispatch = useDispatch();
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  // 選擇 state 中特定的資料
+  const bugs = useSelector((state) => state.entities.bugs.list);
 
-### `npm run eject`
+  useEffect(() => {
+    // 從 remote server loads bugs (只需要第一次)
+    dispatch(loadBugs());
+  }, []);
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+  return (
+    <ul>
+      {bugs.map((bug) => (
+        <li key={bug.id}>{bug.description}</li>
+      ))}
+    </ul>
+  );
+};
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+export default BugsList;
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Exercise:
+在 React 上，顯示 Unresolved Bugs
+```js
+import React, { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { loadBugs, resolveBug, getUnresolvedBugs } from "../store/bugs";
 
-## Learn More
+const BugsList = () => {
+  const dispatch = useDispatch();
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+  const bugs = useSelector(getUnresolvedBugs); // bugs 會獲得 unresolved bugs
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+  useEffect(() => {
+    dispatch(loadBugs());
+  }, []);
 
-### Code Splitting
+  const handleResolved = (bugId) => {
+    dispatch(resolveBug(bugId));
+  };
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+  return (
+    <ul>
+      {bugs.map((bug) => (
+        <li key={bug.id}>
+          <span>{bug.description}</span>
+          <button onClick={() => handleResolved(bug.id)}>Resolved</button>
+        </li>
+      ))}
+    </ul>
+  );
+};
 
-### Analyzing the Bundle Size
+export default BugsList;
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```
