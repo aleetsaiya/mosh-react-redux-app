@@ -12,7 +12,7 @@ npm install redux @redux.js/toolkit axios moment
 npm install react-redux
 ```
 
-4. 在上層 `component` create store，以及使用 `react-redux` 建立 `Provider`
+4. 在上層 component `configureStore`，以及使用 `react-redux` 建立 `Provider`
 ```js
 import "./App.css";
 import BugsList from "./components/BugsList";
